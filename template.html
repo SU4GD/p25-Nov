@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="file:///{PLUGIN_PATH}/PLANTCollection/plant_collection_assets/css/plant_collection.css" />
+  <title>PLANT25: COLLECTION</title>
+</head>
+<body>
+  <div class="sidebar">
+    <img src="file:///{PLUGIN_PATH}/resources/images/plant_collection_margin.png" alt="Margin" class="sidebar-margin" />
+    <img src="file:///{PLUGIN_PATH}/resources/images/logo_main.png" alt="Logo" class="sidebar-logo" />
+  </div>
+
+  <div class="content">
+    <div class="header-row">
+      <h1 class="header">PLANT COLLECTION</h1>
+      <div class="profile-button-container">
+        <button title="Help" class="small-button" onclick="window.sketchup.openHelp()" aria-label="Open Help Documentation">
+          <img src="file:///{PLUGIN_PATH}/resources/images/help.png" alt="Help Icon" />
+        </button>
+      </div>
+    </div>
+
+    <div class="body-row">
+      <div class="container1">
+        <div class="search-container">
+          <!-- MODIFIED: onkeyup to oninput for better responsiveness -->
+          <input type="text" id="plantSearchInput" placeholder="Search plants..." oninput="filterComponents(this)" aria-label="Search plants by name" />
+        </div>
+        <div class="plant-list-container">
+          <div class="list-wrapper" id="plant-list" role="listbox" aria-label="Plant list">
+            <!-- Plant items will be injected here by JS -->
+          </div>
+        </div>
+      </div>
+      <div class="container2" id="plant-details" role="region" aria-live="polite" aria-atomic="true">
+        <div class="placeholder-message">
+          Select a plant from the list to view its details.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enhanced Custom Color Modal -->
+  <div id="customColorModal" role="dialog" aria-modal="true" aria-labelledby="customColorModalTitle" style="display: none;">
+    <div id="customColorModalContent">
+      <h3 id="customColorModalTitle">Custom Color</h3>
+      
+      <!-- Color Picker Canvas -->
+      <canvas id="colorPickerCanvas" width="256" height="256" aria-label="Color picker canvas - click and drag to select color"></canvas>
+      
+      <!-- Hue Slider -->
+      <input type="range" id="hueRange" min="0" max="360" step="1" value="0" aria-label="Hue slider" />
+      
+      <!-- Color Preview -->
+      <div id="customColorPreview" aria-label="Selected color preview"></div>
+      
+      <!-- RGB Input Fields -->
+      <div class="rgb-input-group"> 
+        <label for="custom_color_r_modal_input">R:</label>
+        <input type="number" id="custom_color_r_modal_input" min="0" max="255" placeholder="0-255" aria-label="Red value" />
+        
+        <label for="custom_color_g_modal_input">G:</label>
+        <input type="number" id="custom_color_g_modal_input" min="0" max="255" placeholder="0-255" aria-label="Green value" />
+        
+        <label for="custom_color_b_modal_input">B:</label>
+        <input type="number" id="custom_color_b_modal_input" min="0" max="255" placeholder="0-255" aria-label="Blue value" />
+      </div>
+      
+      <!-- Modal Buttons -->
+      <div class="modal-button-container">
+        <button type="button" onclick="setCustomColorFromModal()">OK</button>
+        <button type="button" class="secondary" onclick="closeCustomColorModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" style="display: none;">
+    <div id="deleteModalContent">
+      <h3 id="deleteModalTitle">Confirm Delete</h3>
+      <div class="modal-message" id="deleteModalMessage"></div>
+      <div class="modal-button-container">
+        <button type="button" id="confirmDeleteBtn">Delete</button>
+        <button type="button" class="secondary" id="cancelDeleteBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="file:///{PLUGIN_PATH}/PLANTCollection/plant_collection_assets/js/plant_collection.js"></script>
+</body>
+</html>

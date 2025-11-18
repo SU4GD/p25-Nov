@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>PLANT25:HOME</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/dialog.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="sidebar">
+        <img class="sidebar-margin" data-image-key="margin" alt="Decorative Margin">
+        <img class="sidebar-logo" data-image-key="logo" alt="PLANT25 Logo">
+      </div>
+      <div class="main-content">
+        <div class="header-row">
+          <div class="header">WELCOME TO PLANT25</div>
+          <div class="profile-button-container">
+            <button class="small-button" title="Profile" onclick="launchSimpleTool('openProfile','Profile')" aria-label="Open User Profile">
+              <img data-image-key="profile" alt="Profile Icon">
+            </button>
+            <button class="small-button" title="Help" onclick="launchSimpleTool('openHelp','Help')" aria-label="Open Help Documentation">
+              <img data-image-key="help" alt="Help Icon">
+            </button>
+            <button class="small-button" title="Mini Toolbar" onclick="launchSimpleTool('openMiniToolbar','Mini Toolbar')" aria-label="Open Mini Toolbar">
+              <img data-image-key="mini" alt="Mini Toolbar Icon">
+            </button>
+          </div>
+        </div>
+        <div class="button-container" role="toolbar" aria-label="Main tools">
+          <button class="image-button" title="PLANTPlace" onclick="launchTool('openPlantPlace','PLANTPlace')" aria-label="Place Plant Tool">
+            <img data-image-key="plant_place" alt="Place Plant">
+          </button>
+          <button class="image-button" title="PLANTPath" onclick="launchTool('openPlantPath','PLANTPath')" aria-label="Plant Path Tool">
+            <img data-image-key="plant_path" alt="Plant Path">
+          </button>
+          <button class="image-button" title="PLANTArray" onclick="launchTool('openPlantArray','PLANTArray')" aria-label="Plant Array Tool">
+            <img data-image-key="plant_array" alt="Plant Array">
+          </button>
+          <button class="image-button" title="PLANTCreate" onclick="launchSimpleTool('openPlantCreate','PLANTCreate')" aria-label="Create Plant Tool">
+            <img data-image-key="plant_create" alt="Create Plant">
+          </button>
+          <button class="image-button" title="PLANTCollection" onclick="launchSimpleTool('openPlantCollection','PLANTCollection')" aria-label="Plant Collection Tool">
+            <img data-image-key="collection" alt="Plant Collection">
+          </button>
+          <button class="image-button" title="PLANTReport" onclick="launchSimpleTool('openPlantReport','PLANTReport')" aria-label="Plant Report Tool">
+            <img data-image-key="plant_report" alt="Plant Report">
+          </button>
+        </div>
+
+        <!-- Category filter remains commented out -->
+        <!--
+        <div class="filter-container">
+          <label for="categoryFilter" class="visually-hidden">Filter by Category</label>
+          <select id="categoryFilter" onchange="filterItems()" aria-label="Filter plants by category">
+            <option value="">All Categories</option>
+            <option value="Annual">Annual</option>
+            <option value="Biennial">Biennial</option>
+            <option value="Bulb">Bulb</option>
+            <option value="Climber">Climber</option>
+            <option value="Fern">Fern</option>
+            <option value="Ornamental Grass">Ornamental Grass</option>
+            <option value="Perennial">Perennial</option>
+            <option value="Shrub">Shrub</option>
+            <option value="Tree">Tree</option>
+          </select>
+        </div>
+        -->
+
+        <!-- MODIFICATION: Search container restored -->
+        <div class="search-container">
+          <label for="searchFilter" class="visually-hidden">Search Plants</label>
+          <input type="text" id="searchFilter" placeholder="Search plants..." oninput="filterItems()" aria-label="Search for plants by name">
+        </div>
+
+        <div class="plant-list" id="plantList" role="listbox" aria-label="Available plants">
+          <div class="empty-message">Updating Plant List...</div>
+        </div>
+        <div class="refresh-container">
+          <button class="refresh-button" onclick="manualRefreshList()" aria-label="Refresh plant list">Refresh List</button>
+        </div>
+        <div class="footer">
+          <a href="https://www.sketchupforgardendesign.com" target="_blank" aria-label="Visit SketchUp for Garden Design website">
+            <img data-image-key="footer" alt="Sketchup For Garden Design">
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div id="progressContainer" style="display: none;" role="alertdialog" aria-labelledby="progressHeading" aria-describedby="loadingStatus" aria-modal="true">
+        <h3 id="progressHeading">Updating Plant Library</h3>
+        <progress id="loadingProgress" max="100" value="0"></progress>
+        <div id="loadingStatus">Loading 0 of 0 plants...</div>
+    </div>
+
+    <div id="aria-announcer" aria-live="polite" aria-atomic="true" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); pointer-events: none;"></div>
+
+    <script src="js/dialog.js"></script>
+    <script>
+      const style = document.createElement('style');
+      style.innerHTML = `.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }`;
+      document.head.appendChild(style);
+
+      document.addEventListener('DOMContentLoaded', function() {
+        // Call filterItems if it exists, to apply initial search filter (which will be empty)
+        // This also ensures the event listener for search input is active if filterItems is restored.
+        if (typeof filterItems === 'function') {
+          filterItems(); 
+        }
+      });
+    </script>
+  </body>
+</html>

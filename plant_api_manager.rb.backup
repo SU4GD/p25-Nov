@@ -1,0 +1,440 @@
+# PLANT25/core/plant_api_manager.rb
+# Plant API Manager - Handles communication with PLANT25 plant content server
+# Integrates with existing CacheManager and maintains backward compatibility
+
+require 'net/http'
+require 'uri'
+require 'json'
+require 'fileutils'
+
+module BlueGerberaHorticulture
+  module PLANT25
+    module PlantAPIManager
+      
+      # Configuration
+      API_BASE_URL = 'http://18.168.221.171:5025'.freeze
+      API_TIMEOUT = 30 # seconds
+      RETRY_ATTEMPTS = 3
+      RETRY_DELAY = 2 # seconds
+      
+      @initialized = false
+      @permanent_plant_path = nil
+      @local_manifest = {}
+      @api_available = true
+      @last_api_check = nil
+      @api_check_interval = 300 # 5 minutes
+      @download_progress_callbacks = []
+      @mutex = Mutex.new
+      
+      class << self
+        attr_reader :permanent_plant_path, :local_manifest, :api_available
+        
+        def initialize
+          return if @initialized
+          
+          setup_permanent_directory
+          load_local_manifest
+          @initialized = true
+          debug_log("PlantAPIManager initialized successfully")
+        end
+        
+        # Replace the old get_plant_library_path functionality
+        def get_plant_library_path
+          return @permanent_plant_path if @permanent_plant_path && Dir.exist?(@permanent_plant_path)
+          setup_permanent_directory
+          @permanent_plant_path
+        end
+        
+        # Check for plant updates from API (replaces perform_full_scan logic)
+        def check_for_updates
+          return false unless api_available?
+          
+          begin
+            server_manifest = fetch_server_manifest
+            return false unless server_manifest
+            
+            updates_available = compare_manifests(server_manifest)
+            
+            if updates_available.any?
+              debug_log("Found #{updates_available.length} plant updates available")
+              download_plant_updates(updates_available)
+              return true
+            else
+              debug_log("No plant updates available")
+              return false
+            end
+            
+          rescue => e
+            error_log("Error checking for plant updates: #{e.message}")
+            return false
+          end
+        end
+        
+        # Download a specific plant by ID
+        def download_plant(plant_id, &progress_callback)
+          return false unless api_available?
+          
+          begin
+            require 'uri'
+            encoded_plant_id = URI::DEFAULT_PARSER.escape(plant_id)
+            url = "#{API_BASE_URL}/api/plants/download/#{encoded_plant_id}"
+            file_path = File.join(@permanent_plant_path, "#{plant_id}.skp")
+            
+            success = download_file_with_progress(url, file_path, &progress_callback)
+            
+            if success
+              # Update local manifest
+              update_local_manifest_entry(plant_id)
+              save_local_manifest
+              debug_log("Successfully downloaded plant: #{plant_id}")
+              return true
+            else
+              error_log("Failed to download plant: #{plant_id}")
+              return false
+            end
+            
+          rescue => e
+            error_log("Error downloading plant #{plant_id}: #{e.message}")
+            return false
+          end
+        end
+        
+        # Get available plants from server (for UI population)
+        def get_available_plants
+          return [] unless api_available?
+          
+          begin
+            response = make_api_request('/api/plants')
+            return [] unless response
+            
+            data = JSON.parse(response)
+            return data['plants'] || []
+            
+          rescue => e
+            error_log("Error fetching available plants: #{e.message}")
+            return []
+          end
+        end
+        
+        # Check if a specific plant exists locally
+        def plant_exists_locally?(plant_id)
+          file_path = File.join(@permanent_plant_path, "#{plant_id}.skp")
+          File.exist?(file_path)
+        end
+        
+        # Get local plant file path
+        def get_plant_path(plant_id)
+          file_path = File.join(@permanent_plant_path, "#{plant_id}.skp")
+          File.exist?(file_path) ? file_path : nil
+        end
+        
+        # Add progress callback for downloads
+        def add_progress_callback(&block)
+          @download_progress_callbacks << block if block_given?
+        end
+        
+        # Remove all progress callbacks
+        def clear_progress_callbacks
+          @download_progress_callbacks.clear
+        end
+        
+        # Force re-download of all plants (for troubleshooting)
+        def force_full_refresh
+          return false unless api_available?
+          
+          debug_log("Starting force full refresh of plant library")
+          
+          begin
+            # Clear local manifest
+            @local_manifest = {}
+            save_local_manifest
+            
+            # Get all available plants
+            plants = get_available_plants
+            return false if plants.empty?
+            
+            total_plants = plants.length
+            downloaded_count = 0
+            
+            plants.each_with_index do |plant, index|
+              plant_id = plant['id']
+              
+              # Notify progress
+              progress = ((index + 1).to_f / total_plants * 100).round
+              notify_progress_callbacks(plant_id, progress, "Downloading #{plant_id}")
+              
+              if download_plant(plant_id)
+                downloaded_count += 1
+              end
+            end
+            
+            debug_log("Force refresh completed: #{downloaded_count}/#{total_plants} plants downloaded")
+            
+            # Trigger library change notification
+            if defined?(BlueGerberaHorticulture::PLANT25.notify_library_changed)
+              BlueGerberaHorticulture::PLANT25.notify_library_changed
+            end
+            
+            return downloaded_count > 0
+            
+          rescue => e
+            error_log("Error during force full refresh: #{e.message}")
+            return false
+          end
+        end
+        
+        private
+        
+        def setup_permanent_directory
+          # Use the plugin's own directory as reference to find the correct plugins directory
+          if defined?(BlueGerberaHorticulture::PLANT25::PLUGIN_DIR)
+            # PLUGIN_DIR is: /Users/johnbrooks/.../Plugins/PLANT25
+            # We want: /Users/johnbrooks/.../Plugins/PLANT25_Plants
+            plugins_dir = File.dirname(BlueGerberaHorticulture::PLANT25::PLUGIN_DIR)
+            permanent_dir = File.join(plugins_dir, "PLANT25_Plants")
+            @permanent_plant_path = File.join(permanent_dir, "plants")
+            debug_log("Using PLUGIN_DIR method: plugins_dir='#{plugins_dir}', permanent_dir='#{permanent_dir}', plant_path='#{@permanent_plant_path}'")
+          else
+            # Fallback - this shouldn't happen but just in case
+            @permanent_plant_path = File.join(PLUGIN_DIR, "plants")
+            debug_log("Using fallback: plant_path='#{@permanent_plant_path}'")
+          end
+          
+          begin
+            FileUtils.mkdir_p(@permanent_plant_path)
+            debug_log("Successfully created permanent plant directory: #{@permanent_plant_path}")
+          rescue => e
+            error_log("Failed to create permanent plant directory: #{e.message}")
+            # Fallback to plugin directory (will be deleted on update, but functional)
+            @permanent_plant_path = File.join(PLUGIN_DIR, "plants")
+            FileUtils.mkdir_p(@permanent_plant_path) rescue nil
+            debug_log("Using plugin directory fallback: #{@permanent_plant_path}")
+          end
+        end
+        
+        def load_local_manifest
+          manifest_path = File.join(File.dirname(@permanent_plant_path), "manifest.json")
+          
+          if File.exist?(manifest_path)
+            begin
+              data = File.read(manifest_path)
+              @local_manifest = JSON.parse(data)
+              debug_log("Loaded local manifest with #{@local_manifest.keys.length} entries")
+            rescue => e
+              error_log("Error loading local manifest: #{e.message}")
+              @local_manifest = {}
+            end
+          else
+            @local_manifest = {}
+            debug_log("No local manifest found, starting fresh")
+          end
+        end
+        
+        def save_local_manifest
+          manifest_path = File.join(File.dirname(@permanent_plant_path), "manifest.json")
+          
+          begin
+            File.write(manifest_path, JSON.pretty_generate(@local_manifest))
+            debug_log("Saved local manifest")
+          rescue => e
+            error_log("Error saving local manifest: #{e.message}")
+          end
+        end
+        
+        def api_available?
+          # Cache API availability check to avoid constant network calls
+          current_time = Time.now.to_i
+          
+          if @last_api_check && (current_time - @last_api_check) < @api_check_interval
+            return @api_available
+          end
+          
+          @last_api_check = current_time
+          
+          begin
+            response = make_api_request('/version', timeout: 10)
+            @api_available = !response.nil?
+            debug_log("API availability check: #{@api_available}")
+            return @api_available
+          rescue
+            @api_available = false
+            debug_log("API not available")
+            return false
+          end
+        end
+        
+        def fetch_server_manifest
+          response = make_api_request('/api/plants/manifest')
+          return nil unless response
+          
+          data = JSON.parse(response)
+          return data['plants'] || {}
+        rescue => e
+          error_log("Error fetching server manifest: #{e.message}")
+          return nil
+        end
+        
+        def compare_manifests(server_manifest)
+          updates_needed = []
+          
+          server_manifest.each do |plant_id, server_data|
+            local_data = @local_manifest[plant_id]
+            
+            # Check if plant needs download/update
+            needs_update = false
+            
+            if !local_data
+              # New plant
+              needs_update = true
+              debug_log("New plant available: #{plant_id}")
+            elsif local_data['version'] != server_data['version']
+              # Version changed
+              needs_update = true
+              debug_log("Plant version update available: #{plant_id} (#{local_data['version']} -> #{server_data['version']})")
+            elsif local_data['hash'] && server_data['hash'] && local_data['hash'] != server_data['hash']
+              # Hash changed
+              needs_update = true
+              debug_log("Plant file changed: #{plant_id}")
+            elsif !plant_exists_locally?(plant_id)
+              # File missing locally
+              needs_update = true
+              debug_log("Plant file missing locally: #{plant_id}")
+            end
+            
+            if needs_update
+              updates_needed << {
+                'id' => plant_id,
+                'server_data' => server_data,
+                'local_data' => local_data
+              }
+            end
+          end
+          
+          return updates_needed
+        end
+        
+        def download_plant_updates(updates)
+          total_updates = updates.length
+          successful_downloads = 0
+          
+          updates.each_with_index do |update, index|
+            plant_id = update['id']
+            
+            # Notify progress
+            progress = ((index + 1).to_f / total_updates * 100).round
+            notify_progress_callbacks(plant_id, progress, "Updating #{plant_id}")
+            
+            if download_plant(plant_id)
+              successful_downloads += 1
+            end
+          end
+          
+          debug_log("Downloaded #{successful_downloads}/#{total_updates} plant updates")
+          
+          # Trigger library change notification if any downloads succeeded
+          if successful_downloads > 0 && defined?(BlueGerberaHorticulture::PLANT25.notify_library_changed)
+            BlueGerberaHorticulture::PLANT25.notify_library_changed
+          end
+          
+          return successful_downloads
+        end
+        
+        def update_local_manifest_entry(plant_id)
+          # Get file info
+          file_path = File.join(@permanent_plant_path, "#{plant_id}.skp")
+          return unless File.exist?(file_path)
+          
+          @local_manifest[plant_id] = {
+            'version' => '1.0', # Will be updated when we fetch from server manifest
+            'downloaded_at' => Time.now.iso8601,
+            'file_size' => File.size(file_path),
+            'file_path' => file_path
+          }
+        end
+        
+        def make_api_request(endpoint, timeout: API_TIMEOUT)
+          uri = URI("#{API_BASE_URL}#{endpoint}")
+          
+          Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https', open_timeout: timeout, read_timeout: timeout) do |http|
+            request = Net::HTTP::Get.new(uri)
+            request['User-Agent'] = "PLANT25-SketchUp/#{C_P25_VERSION}"
+            
+            response = http.request(request)
+            
+            if response.code.to_i == 200
+              return response.body
+            else
+              error_log("API request failed: #{endpoint} -> #{response.code} #{response.message}")
+              return nil
+            end
+          end
+        rescue => e
+          error_log("Network error for #{endpoint}: #{e.message}")
+          return nil
+        end
+        
+        def download_file_with_progress(url, file_path, &progress_callback)
+          uri = URI(url)
+          
+          Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
+            request = Net::HTTP::Get.new(uri)
+            request['User-Agent'] = "PLANT25-SketchUp/#{C_P25_VERSION}"
+            
+            http.request(request) do |response|
+              if response.code.to_i == 200
+                total_size = response['content-length'].to_i
+                downloaded_size = 0
+                
+                File.open(file_path, 'wb') do |file|
+                  response.read_body do |chunk|
+                    file.write(chunk)
+                    downloaded_size += chunk.length
+                    
+                    # Call progress callback if provided
+                    if progress_callback && total_size > 0
+                      progress = (downloaded_size.to_f / total_size * 100).round
+                      progress_callback.call(progress, downloaded_size, total_size)
+                    end
+                  end
+                end
+                
+                return true
+              else
+                error_log("Download failed: #{url} -> #{response.code} #{response.message}")
+                return false
+              end
+            end
+          end
+        rescue => e
+          error_log("Download error for #{url}: #{e.message}")
+          return false
+        end
+        
+        def notify_progress_callbacks(plant_id, progress, message)
+          @download_progress_callbacks.each do |callback|
+            begin
+              callback.call(plant_id, progress, message)
+            rescue => e
+              error_log("Error in progress callback: #{e.message}")
+            end
+          end
+        end
+        
+        def debug_log(message)
+          if defined?(BlueGerberaHorticulture::PLANT25.debug_log)
+            BlueGerberaHorticulture::PLANT25.debug_log("[PlantAPIManager] #{message}")
+          end
+        end
+        
+        def error_log(message)
+          if defined?(BlueGerberaHorticulture::PLANT25.error_log)
+            BlueGerberaHorticulture::PLANT25.error_log("[PlantAPIManager] #{message}")
+          else
+            puts "[PLANT25 PlantAPIManager ERROR] #{message}"
+          end
+        end
+        
+      end # class << self
+    end # module PlantAPIManager
+  end # module PLANT25
+end # module BlueGerberaHorticulture

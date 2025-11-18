@@ -1,0 +1,571 @@
+/* plant_collection.css â€" Styles for PLANTCollection dialog */
+:root {
+  --primary-color: #274246;
+  --secondary-color: #31575d;
+  --background-color: #f9f9f9;
+  --border-color: #ddd; /* General borders */
+  --light-border: #eee; /* Lighter borders like dividers */
+  --font-color: #333;
+  --border-radius: 6px;
+  --transition-speed: 0.2s;
+  --input-border: #ccc; /* Specific for form inputs */
+  --focus-ring-color: rgba(39, 66, 70, 0.3);
+  --hover-bg-color: #e9f1f3; /* Light blue-gray for hover/focus */
+  --selected-bg-color: #d1dfe3; /* Darker for selected items */
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  background-color: var(--background-color);
+  font-size: 14px;
+  color: var(--font-color);
+  display: flex;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 80px;
+  background: linear-gradient(var(--primary-color), var(--secondary-color));
+  padding: 25px 0 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 2px 0 6px rgba(0,0,0,.1);
+  flex-shrink: 0;
+}
+
+.sidebar-margin, .sidebar-logo {
+  display: block;
+  width: 80px; 
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+}
+
+.content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  overflow: hidden; 
+}
+
+.header-row {
+  border-bottom: 1px solid var(--primary-color);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0; 
+}
+
+.header {
+  font-size: 21px;
+  font-weight: normal;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.profile-button-container {
+  display: flex;
+  gap: 10px;
+}
+
+.small-button { /* For Help button */
+  width: 35px;
+  height: 35px;
+  border: 1px solid var(--input-border); 
+  border-radius: 8px; 
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+  transition: all var(--transition-speed) ease;
+}
+.small-button:hover {
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transform: translateY(-1px);
+}
+.small-button:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--focus-ring-color);
+}
+.small-button img {
+  width: 25px;
+  height: 25px;
+  object-fit: contain; 
+}
+
+.body-row {
+  display: flex;
+  gap: 15px;
+  flex-grow: 1;
+  overflow: hidden; 
+}
+
+/* Left Column: Plant List */
+.container1 { 
+  width: 300px; 
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: #fff;
+  overflow: hidden; 
+}
+
+.search-container {
+  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.search-container input[type="text"] { 
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius);
+  outline: none;
+  transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+  font-family: 'Roboto', sans-serif;
+}
+.search-container input[type="text"]:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--focus-ring-color);
+}
+
+.plant-list-container {
+  flex-grow: 1;
+  overflow-y: auto; 
+}
+.list-wrapper { 
+  padding: 2px 0; 
+}
+.plant-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px; 
+  font-size: 13px;
+  border-bottom: 1px solid var(--light-border);
+  color: var(--font-color);
+  cursor: pointer;
+  line-height: 1.5; 
+  transition: background-color var(--transition-speed) ease;
+  user-select: none; 
+}
+.plant-item:last-child {
+  border-bottom: none;
+}
+.plant-item:hover, .plant-item:focus { 
+  background-color: var(--hover-bg-color);
+  outline: none; 
+  color: var(--primary-color); 
+}
+.plant-item.selected { 
+  background-color: var(--selected-bg-color); 
+  font-weight: 500; 
+  color: var(--primary-color); 
+}
+.plant-item.selected:focus { 
+    box-shadow: inset 0 0 0 2px var(--primary-color); /* Inset shadow for selected focused item */
+}
+
+.color-circle { /* Generic style, used in details view */
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+.plant-item-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+}
+.plant-item-empty { 
+  font-style: italic;
+  color: #666;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Right Column: Plant Details */
+.container2 { 
+  width: 650px; 
+  flex-shrink: 0; 
+  background-color: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; 
+}
+.container2 .placeholder-message { 
+  color: #666;
+  font-size: 16px;
+  margin: auto; 
+  text-align: center;
+}
+.plant-header { 
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-top: 0; 
+  margin-bottom: 15px; 
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--light-border);
+}
+.attribute-row {
+  display: flex;
+  margin-bottom: 20px; 
+  line-height: 1.5;   
+  align-items: baseline; 
+}
+.attribute-label {
+  width: 150px; 
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--primary-color);
+  padding-right: 10px;
+}
+.attribute-value {
+  flex-grow: 1;
+  color: var(--font-color);
+  word-wrap: break-word; 
+}
+.attribute-value pre { 
+  margin: 0;
+  font-family: inherit; 
+  font-size: inherit;   
+  white-space: pre-wrap; 
+  color: var(--font-color); 
+}
+.attribute-value .color-circle { /* Swatch in details view */
+  width: 20px;  
+  height: 20px; 
+  /* Inherits .color-circle base styles */
+  display: inline-block; 
+  vertical-align: middle; 
+}
+
+/* Edit Mode Table */
+#editAttributesTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+#editAttributesTable td {
+  padding: 6px 4px;
+  vertical-align: top;
+  line-height: 1.4;
+}
+#editAttributesTable td:first-child { 
+  width: 140px;
+  font-weight: 600;
+  color: var(--primary-color);
+  padding-right: 10px;
+}
+#editAttributesTable input[type="text"],
+#editAttributesTable input[type="number"],
+#editAttributesTable select,
+#editAttributesTable textarea {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius);
+  font-family: 'Roboto', sans-serif;
+  color: var(--font-color);
+  transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+#editAttributesTable input:focus,
+#editAttributesTable select:focus,
+#editAttributesTable textarea:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus-ring-color);
+}
+#editAttributesTable textarea {
+  min-height: 80px;
+  resize: vertical;
+  white-space: pre-wrap;
+}
+#editAttributesTable input[type="checkbox"] { 
+  width: auto; 
+  margin-right: 5px;
+  accent-color: var(--primary-color);
+  vertical-align: middle; 
+}
+#editAttributesTable input[type="checkbox"]:focus {
+    outline: 1px dotted var(--primary-color);
+    outline-offset: 1px;
+}
+
+/* Color Swatches for Edit Mode Color Picker */
+.color-swatch { 
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: all var(--transition-speed) ease;
+}
+.color-swatch:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 4px rgba(0,0,0,0.2);
+}
+.color-swatch:focus { 
+    outline: none;
+    border-color: var(--primary-color); 
+    box-shadow: 0 0 0 2px var(--focus-ring-color), 0 0 4px rgba(0,0,0,0.2);
+    transform: scale(1.05); 
+}
+.color-swatch.selected { 
+  border-width: 2px; 
+  border-color: var(--primary-color);
+  box-shadow: 0 0 5px var(--focus-ring-color); 
+}
+.color-swatch.custom {
+  border: 1.5px dashed var(--primary-color);
+  background-color: #fff; 
+}
+.color-swatch.custom::after {
+  content: "+";
+  position: absolute;
+  color: var(--primary-color);
+  font-size: 13px; 
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.edit-button-container, 
+.view-button-container { 
+  margin-top: 20px; 
+  padding-top: 15px;
+  border-top: 1px solid var(--light-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0; 
+}
+.view-button-container { 
+  margin-top: auto; 
+}
+
+/* General button styles */
+button {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Roboto', sans-serif; 
+  transition: all var(--transition-speed) ease;
+  line-height: 1.4; 
+}
+button:hover {
+  background-color: var(--secondary-color);
+}
+button:focus { 
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring-color); 
+}
+button.secondary {
+  background-color: #ccc;
+  color: #333;
+}
+button.secondary:hover {
+  background-color: #bbb;
+}
+button.danger {
+  background-color: #dc3545;
+}
+button.danger:hover {
+  background-color: #c82333;
+}
+
+/* Enhanced Custom Color Modal */
+#customColorModal {
+  display: none; 
+  position: fixed; 
+  z-index: 999; 
+  left: 0; top: 0;
+  width: 100%; height: 100%; 
+  background: rgba(0,0,0,0.4); 
+  align-items: center;
+  justify-content: center;
+}
+#customColorModalContent {
+  background: #fff;
+  width: 380px; 
+  padding: 20px;
+  border-radius: 8px;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Enhanced Color Picker Canvas */
+#colorPickerCanvas {
+  width: 256px;
+  height: 256px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  cursor: crosshair;
+  border: 1px solid var(--light-border);
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Enhanced Hue Range Slider */
+#hueRange {
+  width: 256px;
+  margin-bottom: 10px;
+  appearance: none;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, rgb(255, 0, 0), rgb(255, 255, 0), rgb(0, 255, 0), rgb(0, 255, 255), rgb(0, 0, 255), rgb(255, 0, 255), rgb(255, 0, 0));
+  outline: none;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#hueRange:focus { 
+  box-shadow: 0 0 0 2px var(--focus-ring-color);
+}
+
+#hueRange::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #999;
+  cursor: pointer;
+  margin-top: -3px;
+}
+
+#hueRange::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #999;
+  cursor: pointer;
+}
+
+/* Enhanced Color Preview */
+#customColorPreview {
+  width: 256px;
+  height: 40px;
+  border: 1px solid var(--input-border);
+  margin-bottom: 10px;
+  border-radius: 4px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Enhanced RGB Input Group */
+.rgb-input-group { 
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.rgb-input-group input {
+  width: 54px;
+  text-align: center;
+  padding: 4px;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  font-family: 'Roboto', sans-serif;
+}
+
+.rgb-input-group input:focus { 
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--focus-ring-color);
+}
+
+.rgb-input-group label {
+  font-weight: bold;
+  min-width: 15px;
+  color: var(--font-color);
+}
+
+/* Modal Button Container */
+.modal-button-container { 
+  display: flex; 
+  justify-content: center; 
+  gap: 10px; 
+  width: 100%; 
+  margin-top: 10px;
+}
+
+/* Delete Modal Styles - Following the same pattern as customColorModal */
+#deleteModal {
+  display: none; 
+  position: fixed; 
+  z-index: 999; 
+  left: 0; top: 0;
+  width: 100%; height: 100%; 
+  background: rgba(0,0,0,0.4); 
+  align-items: center;
+  justify-content: center;
+}
+
+#deleteModalContent {
+  background: #fff;
+  width: 400px; 
+  padding: 20px;
+  border-radius: 8px;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+#deleteModalTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.modal-message {
+  font-size: 14px;
+  color: var(--font-color);
+  margin-bottom: 20px;
+  line-height: 1.4;
+}

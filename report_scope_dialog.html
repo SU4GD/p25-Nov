@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Report Scope</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            font-family: 'Roboto', Arial, sans-serif; 
+            background-color: #f9f9f9; 
+            color: #343a40; 
+            font-size: 14px; 
+            display: flex; 
+            flex-direction: column;
+        }
+        
+        .main-content {
+            flex: 1; 
+            padding: 15px 20px 20px 20px; 
+            display: flex;
+            flex-direction: column;
+        }
+        .header-title {
+            font-size: 18px; 
+            font-weight: 700; 
+            color: #274246;
+            margin-bottom: 10px; 
+            padding-bottom: 0;   
+            text-align: left; 
+            min-height: 0; 
+        }
+        fieldset {
+            border: 1px solid #274246; 
+            border-radius: 6px;
+            padding: 15px 20px 20px 20px; 
+            margin: 0 0 10px 0; 
+            background-color: #ffffff; 
+        }
+        legend { 
+            font-weight: 500; 
+            padding: 0 8px;
+            font-size: 1em; 
+            color: #274246;
+            margin-bottom: 10px; 
+        }
+        .radio-group label {
+            display: block;
+            margin-bottom: 12px;
+            padding: 8px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border: 1px solid transparent; 
+        }
+        .radio-group label:hover { background-color: #f1f3f5; }
+        .radio-group input[type="radio"] {
+            margin-right: 8px;
+            vertical-align: middle;
+            accent-color: #274246; 
+            transform: scale(1.1); 
+        }
+        .radio-group .radio-label-text { vertical-align: middle; }
+        .disabled-label { color: #999; cursor: not-allowed; }
+        .disabled-label:hover { background-color: transparent; }
+        .disabled-label input[type="radio"] { accent-color: #ccc; }
+        .button-group {
+            display: flex;
+            justify-content: flex-end; 
+            gap: 10px;
+            margin-top: 10px; 
+            padding-top: 0;   
+        }
+        .button-group button {
+            padding: 9px 18px;
+            border-radius: 4px;
+            border: 1px solid #ced4da; 
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            background-color: #f8f9fa; 
+            color: #274246; 
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .button-group button.primary {
+            background-color: #274246; 
+            color: white;
+            border-color: #274246;
+        }
+        .button-group button:hover { border-color: #adb5bd; background-color: #e9ecef; }
+        .button-group button.primary:hover { background-color: #31575d; border-color: #31575d; }
+        input[type="radio"]:focus-visible + .radio-label-text { outline: 2px solid #274246; outline-offset: 1px; }
+        button:focus-visible { outline: 2px solid #274246; outline-offset: 2px; }
+    </style>
+</head>
+<body>
+    <div class="main-content"> 
+        <div class="header-title"></div>
+        <fieldset>
+            <legend>Report Options</legend> 
+            <div class="radio-group">
+                <label for="scopeWholeModel">
+                    <input type="radio" name="reportScope" value="whole_model" id="scopeWholeModel" checked>
+                    <span class="radio-label-text">Full Report</span>
+                </label>
+                <label for="scopeCurrentSelection" id="labelCurrentSelection">
+                    <input type="radio" name="reportScope" value="current_selection" id="scopeCurrentSelection">
+                    <span class="radio-label-text">Current Selection</span> 
+                </label>
+            </div>
+        </fieldset>
+        <div class="button-group">
+            <button type="button" onclick="cancelScope()" aria-label="Cancel report scope selection">Cancel</button>
+            <button type="button" class="primary" onclick="submitScopeChoice()" aria-label="Confirm report scope and proceed">OK</button>
+        </div>
+    </div>
+
+    <script>
+        (function() { 
+            'use strict';
+
+            if (window.sketchup && typeof window.sketchup.scope_dialog_ready === 'function') {
+                window.sketchup.scope_dialog_ready();
+            } else {
+                console.warn("JS (ScopeDialog): sketchup.scope_dialog_ready was not available on initial script load.");
+            }
+
+            const scopeWholeModelRadio = document.getElementById('scopeWholeModel');
+            const scopeCurrentSelectionRadio = document.getElementById('scopeCurrentSelection');
+            const labelCurrentSelection = document.getElementById('labelCurrentSelection');
+
+            function initializeScopeDialog(data) {
+                if (typeof sketchup !== 'undefined' && typeof sketchup.consoleLog === 'function') {
+                    sketchup.consoleLog("JS (ScopeDialog): initializeScopeDialog received: " + JSON.stringify(data));
+                } else {
+                    console.log("JS (ScopeDialog): initializeScopeDialog received:", data);
+                }
+
+                if (data && scopeCurrentSelectionRadio && labelCurrentSelection && scopeWholeModelRadio) {
+                    if (data.has_plant_components_in_selection) {
+                        scopeCurrentSelectionRadio.disabled = false;
+                        labelCurrentSelection.classList.remove('disabled-label');
+                        scopeCurrentSelectionRadio.checked = true; 
+                    } else {
+                        scopeCurrentSelectionRadio.disabled = true;
+                        labelCurrentSelection.classList.add('disabled-label');
+                        scopeWholeModelRadio.checked = true; 
+                    }
+                } else {
+                    console.error("JS (ScopeDialog): Elements not found for initialization or data missing.");
+                }
+            }
+
+            function submitScopeChoice() {
+                const selectedScopeInput = document.querySelector('input[name="reportScope"]:checked');
+                if (selectedScopeInput) {
+                    if (window.sketchup && typeof window.sketchup.submit_scope_choice === 'function') {
+                        window.sketchup.submit_scope_choice(JSON.stringify({ scope: selectedScopeInput.value }));
+                    } else {
+                        console.error("JS (ScopeDialog): SketchUp bridge for submit_scope_choice not found.");
+                    }
+                } else {
+                    console.warn("JS (ScopeDialog): No scope selected to submit.");
+                }
+            }
+
+            function cancelScope() {
+                if (window.sketchup && typeof window.sketchup.submit_scope_choice === 'function') {
+                    window.sketchup.submit_scope_choice(JSON.stringify({ scope: "cancel" }));
+                } else {
+                    console.error("JS (ScopeDialog): SketchUp bridge for cancelScope (submit_scope_choice) not found.");
+                }
+            }
+            
+            window.initializeScopeDialog = initializeScopeDialog;
+            window.submitScopeChoice = submitScopeChoice;
+            window.cancelScope = cancelScope;
+        })();
+    </script>
+</body>
+</html>

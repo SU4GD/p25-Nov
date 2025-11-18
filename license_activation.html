@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLANT25 License Activation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: transparent; /* Important for SketchUp dialogs that might not be fully opaque */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px; /* Ensures content isn't flush against edges if dialog is small */
+            box-sizing: border-box;
+        }
+
+        .dialog-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+        }
+
+        .dialog-header {
+            background: linear-gradient(135deg, #274246 0%, #1e3235 100%);
+            color: white;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dialog-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dialog-content {
+            padding: 32px 24px;
+        }
+
+        .dialog-heading {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .dialog-description {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 28px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .license-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #fafbfc;
+        }
+
+        .license-input:focus {
+            outline: none;
+            border-color: #274246;
+            box-shadow: 0 0 0 3px rgba(39, 66, 70, 0.1);
+            background: white;
+        }
+
+        .license-input.error {
+            border-color: #e74c3c;
+            background: #fdf2f2;
+        }
+
+        .license-input.success {
+            border-color: #27ae60;
+            background: #f2fdf5;
+        }
+
+        .format-hint {
+            font-size: 12px;
+            color: #888;
+            margin-top: 6px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none; /* Initially hidden */
+        }
+
+        .error-message.show {
+            display: block; /* Becomes visible when .show is added */
+        }
+
+        .status-message {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 16px 0;
+            font-size: 14px;
+            display: none; /* Initially hidden */
+        }
+
+        .status-message.verifying {
+            background: #e8f2f3;
+            color: #274246;
+            border: 1px solid #b3d4d6;
+            display: block; /* Becomes visible */
+        }
+
+        .status-message.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+            display: block; /* Becomes visible */
+        }
+
+        .status-message.error {
+            background: #fdf2f2;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+            display: block; /* Becomes visible */
+        }
+
+        .dialog-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding-top: 24px;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            min-width: 80px;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-cancel {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+
+        .btn-cancel:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #274246 0%, #1e3235 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, #1e3235 0%, #152729 100%);
+        }
+
+        .btn-primary:disabled {
+            background: #94a3b8; /* A more neutral disabled color */
+            cursor: not-allowed;
+            transform: none; /* Prevent active state on disabled button */
+        }
+
+        .help-link {
+            display: none; /* Or block if you want to show it */
+            text-align: center;
+            padding-top: 16px;
+            font-size: 12px;
+        }
+
+        .help-link a {
+            color: #274246;
+            text-decoration: none;
+        }
+        .help-link a:hover {
+            text-decoration: underline;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff; /* White spinner on dark button */
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle; /* Align spinner with text */
+        }
+        /* If spinner is used in statusMessage, adjust color */
+        .status-message.verifying .spinner {
+            border: 2px solid #274246; /* Darker spinner for light background */
+            border-top-color: transparent;
+        }
+
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="dialog-container">
+        <div class="dialog-header">
+            <h1 class="dialog-title">PLANT25</h1>
+            <button class="close-btn" onclick="cancelActivation()" title="Close dialog">×</button>
+        </div>
+        
+        <div class="dialog-content">
+            <h2 class="dialog-heading">Enter Your License Key</h2>
+            <p class="dialog-description">
+                Please enter your PLANT25 license key below to activate your subscription.
+            </p>
+            
+            <div class="form-group">
+                <label class="form-label" for="licenseKey">License Key</label>
+                <input 
+                    type="text" 
+                    id="licenseKey" 
+                    class="license-input"
+                    maxlength="29" 
+                    autocomplete="off"
+                    spellcheck="false"
+                    aria-describedby="formatHint errorMessage" 
+                    aria-invalid="false"
+                >
+                <div class="format-hint" id="formatHint">Format: PLANT25-XXXXX-XXXXX-XXXXX</div>
+                <div class="error-message" id="errorMessage" role="alert" aria-live="assertive"></div>
+            </div>
+
+            <div class="status-message" id="statusMessage" role="status" aria-live="polite"></div>
+            
+            <div class="dialog-actions">
+                <button type="button" class="btn btn-cancel" onclick="cancelActivation()">Cancel</button>
+                <button type="button" class="btn btn-primary" id="nextBtn" onclick="validateLicense()">Activate</button>
+                <button type="button" class="btn btn-primary" id="closeBtn" onclick="closeDialog()" style="display: none;">Close</button>
+            </div>
+        </div>
+
+        <div class="help-link">
+            <a href="#" onclick="showHelp()">Need help?</a>
+        </div>
+    </div>
+
+    <script>
+        const licenseInput = document.getElementById('licenseKey');
+        const errorMessage = document.getElementById('errorMessage');
+        const statusMessage = document.getElementById('statusMessage');
+        const nextBtn = document.getElementById('nextBtn');
+        const closeBtn = document.getElementById('closeBtn');
+
+        console.log('Initial elements:', { 
+            licenseInput: !!licenseInput, 
+            errorMessage: !!errorMessage, 
+            statusMessage: !!statusMessage, 
+            nextBtn: !!nextBtn, 
+            closeBtn: !!closeBtn 
+        });
+
+        if (licenseInput) {
+            licenseInput.addEventListener('input', function(e) {
+                let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Allow only uppercase alphanum
+                
+                let formattedValue = '';
+                if (value.startsWith("PLANT25")) {
+                    formattedValue = "PLANT25";
+                    value = value.substring(7); // Remove PLANT25 for segmenting
+                    if (value.length > 0) {
+                        formattedValue += "-" + value.substring(0, Math.min(5, value.length));
+                    }
+                    if (value.length > 5) {
+                        formattedValue += "-" + value.substring(5, Math.min(10, value.length));
+                    }
+                    if (value.length > 10) {
+                        formattedValue += "-" + value.substring(10, Math.min(15, value.length));
+                    }
+                } else {
+                    // If "PLANT25" is not the prefix, just format what's there in 5-char segments
+                    // This allows user to type "PLANT25" first or paste a key without it.
+                    // The final validation `isValidFormat` will enforce the full structure.
+                    if (value.length > 0) {
+                        formattedValue += value.substring(0, Math.min(5, value.length));
+                    }
+                    if (value.length > 5) {
+                        formattedValue += "-" + value.substring(5, Math.min(10, value.length));
+                    }
+                    if (value.length > 10) {
+                        formattedValue += "-" + value.substring(10, Math.min(15, value.length));
+                    }
+                     if (value.length > 15) { // For a potential fourth segment if not starting with PLANT25
+                        formattedValue += "-" + value.substring(15, Math.min(20, value.length));
+                    }
+                }
+                
+                // Restore cursor position intelligently (simplified)
+                const originalCursorPos = e.target.selectionStart;
+                const originalLength = e.target.value.length;
+                
+                e.target.value = formattedValue;
+                
+                const newLength = formattedValue.length;
+                let newCursorPos = originalCursorPos + (newLength - originalLength);
+                // Basic adjustment if a dash was added at cursor position
+                if (newLength > originalLength && formattedValue.charAt(originalCursorPos -1) === '-' && e.target.value.charAt(originalCursorPos -1) !== '-') {
+                    // This needs more sophisticated logic to be perfect, often involves counting dashes
+                }
+                // Ensure cursor doesn't go out of bounds
+                newCursorPos = Math.max(0, Math.min(newCursorPos, newLength));
+                
+                try {
+                    e.target.setSelectionRange(newCursorPos, newCursorPos);
+                } catch (ex) { /* ignore */ }
+
+
+                clearError(); 
+                licenseInput.classList.remove('error', 'success'); 
+                licenseInput.setAttribute('aria-invalid', 'false');
+
+                if (formattedValue.length > 0) {
+                    if (/^PLANT25(-[A-Z0-9]{5}){3}$/.test(formattedValue)) {
+                        licenseInput.classList.add('success');
+                    } else if (formattedValue.length >= 29) { 
+                        licenseInput.classList.add('error');
+                        licenseInput.setAttribute('aria-invalid', 'true');
+                    }
+                }
+            });
+
+            licenseInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); 
+                    validateLicense();
+                }
+            });
+        } else {
+            console.error("PLANT25 Error: licenseInput element not found during event listener setup!");
+        }
+
+
+        function isValidFormat(key) {
+            return /^PLANT25-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}$/.test(key);
+        }
+
+        function showError(message) {
+            console.log('showError called with message:', message); 
+            if (errorMessage && licenseInput) {
+                errorMessage.textContent = message;
+                errorMessage.classList.add('show');
+                licenseInput.classList.add('error'); 
+                licenseInput.setAttribute('aria-invalid', 'true');
+                console.log('errorMessage element after showError:', errorMessage.outerHTML);
+            } else {
+                console.error('showError: errorMessage or licenseInput element is null!', {errorMessage:!!errorMessage, licenseInput:!!licenseInput});
+            }
+        }
+
+        function clearError() {
+            console.log('clearError called.'); 
+            if (errorMessage) {
+                errorMessage.textContent = ''; 
+                errorMessage.classList.remove('show');
+            }
+            if (licenseInput) {
+                 licenseInput.classList.remove('error', 'success'); 
+                 licenseInput.setAttribute('aria-invalid', 'false');
+            }
+            if (statusMessage) {
+                statusMessage.textContent = ''; 
+                statusMessage.className = 'status-message'; 
+                console.log('statusMessage style.display after clearError:', statusMessage.style.display, 'className:', statusMessage.className);
+            }
+        }
+
+        function showStatus(message, type) {
+            console.log('showStatus called with message:', message, 'and type:', type); 
+            if (statusMessage) {
+                statusMessage.className = `status-message ${type}`; 
+                if (type === 'verifying') {
+                    statusMessage.innerHTML = `<span class="spinner"></span>${message}`;
+                } else {
+                    statusMessage.textContent = message;
+                }
+                console.log('statusMessage className set to:', statusMessage.className);
+                console.log('statusMessage computed display style:', window.getComputedStyle(statusMessage).display);
+                console.log('statusMessage element after showStatus:', statusMessage.outerHTML);
+            } else {
+                console.error('showStatus: statusMessage element is null!');
+            }
+        }
+
+        async function validateLicense() {
+            console.log('validateLicense called.'); 
+            if (!licenseInput || !nextBtn) {
+                console.error("validateLicense: Critical elements (licenseInput or nextBtn) missing.");
+                showStatus('Interface error. Please close and reopen.', 'error');
+                return;
+            }
+
+            const licenseKey = licenseInput.value.trim().toUpperCase(); 
+            // No: licenseInput.value = licenseKey; // Don't reset here, formatter does it.
+
+            clearError(); 
+
+            if (!licenseKey) {
+                showError('License key cannot be empty.');
+                licenseInput.focus();
+                return;
+            }
+
+            if (!isValidFormat(licenseKey)) {
+                showError('Invalid license key format. Expected: PLANT25-XXXXX-XXXXX-XXXXX. You entered: "' + licenseKey + '".');
+                licenseInput.focus();
+                return;
+            }
+
+            console.log('validateLicense: Disabling nextBtn. Current state:', { disabled: nextBtn.disabled, text: nextBtn.textContent });
+            nextBtn.disabled = true;
+            nextBtn.innerHTML = '<span class="spinner"></span>Activating...'; 
+            
+            showStatus('Verifying PLANT25 License...', 'verifying');
+
+            try {
+                if (typeof sketchup !== 'undefined' && sketchup.validate_license_key) {
+                    console.log('Calling sketchup.validate_license_key with:', licenseKey);
+                    sketchup.validate_license_key(licenseKey);
+                } else {
+                    console.warn('`sketchup.validate_license_key` not found. Simulating validation for testing.');
+                    await simulateValidation(licenseKey);
+                }
+            } catch (error) {
+                console.error('Error during sketchup.validate_license_key call or simulation:', error);
+                showStatus('An unexpected error occurred during validation. Please try again.', 'error');
+                if (nextBtn) {
+                    nextBtn.disabled = false;
+                    nextBtn.textContent = 'Activate';
+                }
+            }
+        }
+        
+        async function simulateValidation(licenseKey) {
+            console.log('Simulating validation for:', licenseKey);
+            await new Promise(resolve => setTimeout(resolve, 2000)); 
+            
+            if (licenseKey === 'PLANT25-TEST1-TEST2-TEST3') {
+                window.handleValidationResult(true, "Simulated success!", JSON.stringify({ customer_name: "Sim User", product_name: "PLANT25 Simulated"}));
+            } else {
+                window.handleValidationResult(false, "Simulated: Invalid license key provided. Your key was: " + licenseKey, null);
+            }
+        }
+
+        function cancelActivation() {
+            console.log('cancelActivation called');
+            if (typeof sketchup !== 'undefined' && sketchup.cancel_license_activation) {
+                sketchup.cancel_license_activation();
+            } else {
+                console.warn('sketchup.cancel_license_activation not found. Dialog would normally close.');
+            }
+        }
+
+        function showHelp() {
+            console.log('showHelp called');
+            if (typeof sketchup !== 'undefined' && sketchup.show_license_help) {
+                sketchup.show_license_help();
+            } else {
+                alert('For help with your license key, please contact support at support@plant25.com');
+            }
+        }
+
+        function closeDialog(reason) { 
+            console.log('closeDialog called. Reason:', reason);
+            if (typeof sketchup !== 'undefined' && sketchup.cancel_license_activation) {
+                sketchup.cancel_license_activation(); 
+            } else {
+                console.warn('sketchup.cancel_license_activation not found. Dialog would normally close.');
+            }
+        }
+
+        window.handleValidationResult = function(success, message, data) {
+            console.log('handleValidationResult called with:', { success, message, data });
+            
+            if (nextBtn) {
+                 nextBtn.innerHTML = 'Activate'; 
+                 nextBtn.disabled = false; 
+            }
+
+            if (success) {
+                let parsedData = data;
+                if (typeof data === 'string' && data !== null && data !== 'null' && data.trim() !== '') {
+                    try {
+                        parsedData = JSON.parse(data);
+                    } catch (e) {
+                        console.error('Error parsing success data JSON:', e, "Data was:", data);
+                        parsedData = { customer_name: 'Valued User', product_name: 'PLANT25' }; 
+                    }
+                } else if (data === null || data === 'null' || (typeof data === 'string' && data.trim() === '')) {
+                     parsedData = { customer_name: 'Valued User', product_name: 'PLANT25' }; 
+                }
+
+                const customerName = (parsedData && parsedData.customer_name) ? parsedData.customer_name : 'Valued User';
+                const successMsg = `License activated successfully! Welcome, ${customerName}!`;
+                
+                console.log('Success branch. Message:', successMsg);
+                showStatus(successMsg, 'success');
+                
+                if (licenseInput) licenseInput.classList.add('success');
+
+                if (nextBtn) {
+                    nextBtn.disabled = true;
+                    nextBtn.textContent = 'Activated!';
+                }
+                if (closeBtn) { 
+                    if (nextBtn) nextBtn.style.display = 'none';
+                    const cancelDialogBtn = document.querySelector('.btn-cancel');
+                    if (cancelDialogBtn) cancelDialogBtn.style.display = 'none';
+                    closeBtn.style.display = 'inline-block';
+                    closeBtn.focus(); 
+                }
+            } else { 
+                console.error('Failure branch. Error Message:', message);
+                const errorMessageText = message || 'License validation failed. Please try again.';
+                showStatus(errorMessageText, 'error'); 
+                if (licenseInput) {
+                    licenseInput.classList.add('error');
+                    licenseInput.setAttribute('aria-invalid', 'true');
+                    licenseInput.focus(); 
+                }
+                console.log('Failure branch: UI updated for error. nextBtn enabled:', nextBtn ? !nextBtn.disabled : 'null');
+            }
+        };
+
+        window.addEventListener('load', () => {
+            console.log('Window loaded. licenseInput found:', !!licenseInput);
+            if(licenseInput) {
+                licenseInput.focus();
+            } else {
+                console.error("PLANT25 Error: licenseInput element not found on window load!");
+            }
+        });
+    </script>
+</body>
+</html>
